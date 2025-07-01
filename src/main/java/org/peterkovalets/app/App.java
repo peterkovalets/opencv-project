@@ -67,6 +67,7 @@ public class App extends JFrame {
     colorChannelBtn.addActionListener(new ColorChannelListener());
     grayscaleBtn.addActionListener(new GrayscaleListener());
     rotateBtn.addActionListener(new RotateListener());
+    drawRectBtn.addActionListener(new DrawRectListener());
 
     colorChannelBtn.setAlignmentX(JButton.CENTER_ALIGNMENT);
     grayscaleBtn.setAlignmentX(JButton.CENTER_ALIGNMENT);
@@ -208,6 +209,64 @@ public class App extends JFrame {
         WarningDialog.showDialog(WarningMessage.EMPTY_VALUE);
       } else {
         filters.rotateImage((int) value);
+      }
+    }
+  }
+
+  /**
+   * Класс слушателя для кнопки рисования прямоугольника.
+   */
+  private class DrawRectListener implements ActionListener {
+
+    /**
+     * Метод, который вызывается при нажатии кнопки.
+     *
+     * @param actionEvent объект события
+     */
+    @Override
+    public void actionPerformed(ActionEvent actionEvent) {
+      if (camera.getIsCapturing()) {
+        WarningDialog.showDialog(WarningMessage.CAPTURING);
+        return;
+      }
+      if (imageMatrix.empty()) {
+        WarningDialog.showDialog(WarningMessage.EMPTY_IMAGE);
+        return;
+      }
+
+      GridLayout grid = new GridLayout(4, 2);
+      grid.setVgap(1);
+      grid.setHgap(4);
+      JPanel panel = new JPanel(grid);
+      JLabel labelStartX = new JLabel("Отступ начала по x");
+      JLabel labelStartY = new JLabel("Отступ начала по y");
+      IntegerField fieldStartX = new IntegerField();
+      IntegerField fieldStartY = new IntegerField();
+      JLabel labelEndX = new JLabel("Отступ конца по x");
+      JLabel labelEndY = new JLabel("Отступ конца по y");
+      IntegerField fieldEndX = new IntegerField();
+      IntegerField fieldEndY = new IntegerField();
+
+      panel.add(labelStartX);
+      panel.add(labelStartY);
+      panel.add(fieldStartX);
+      panel.add(fieldStartY);
+      panel.add(labelEndX);
+      panel.add(labelEndY);
+      panel.add(fieldEndX);
+      panel.add(fieldEndY);
+
+      JOptionPane.showMessageDialog(null, panel,
+          "Координаты прямоугольника", JOptionPane.PLAIN_MESSAGE);
+      Object startX = fieldStartX.getValue();
+      Object startY = fieldStartY.getValue();
+      Object endX = fieldEndX.getValue();
+      Object endY = fieldEndY.getValue();
+
+      if (startX == null || startY == null || endX == null || endY == null) {
+        WarningDialog.showDialog(WarningMessage.ALL_SHOULD_BE_FILLED);
+      } else {
+        filters.drawRectOnImage((int) startX, (int) startY, (int) endX, (int) endY);
       }
     }
   }

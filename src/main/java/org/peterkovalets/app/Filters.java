@@ -1,9 +1,6 @@
 package org.peterkovalets.app;
 
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Size;
+import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import org.peterkovalets.app.components.ImageLabel;
 
@@ -60,6 +57,23 @@ public class Filters {
     Size size = new Size(width, height);
     Mat rotationMatrix = Imgproc.getRotationMatrix2D(center, angle, scale);
     Imgproc.warpAffine(imageMatrix, imageMatrix, rotationMatrix, size);
+    imageLabel.drawImage(imageMatrix);
+  }
+
+  /**
+   * Рисует прямоугольник на изображении.
+   *
+   * @param startX начало по x
+   * @param startY начало по y
+   * @param endX конец по x
+   * @param endY конец по y
+   */
+  public void drawRectOnImage(int startX, int startY, int endX, int endY) {
+    Point start = new Point(startX, startY);
+    Point end = new Point(endX, endY);
+    Scalar blueColor = new Scalar(255, 0, 0);
+
+    Imgproc.rectangle(imageMatrix, start, end, blueColor, 2);
     imageLabel.drawImage(imageMatrix);
   }
 }
