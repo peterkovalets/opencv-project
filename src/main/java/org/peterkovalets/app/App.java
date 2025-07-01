@@ -2,6 +2,7 @@ package org.peterkovalets.app;
 
 import org.opencv.core.Mat;
 import org.peterkovalets.app.components.ImageLabel;
+import org.peterkovalets.app.components.IntegerField;
 import org.peterkovalets.app.warning.WarningDialog;
 import org.peterkovalets.app.warning.WarningMessage;
 
@@ -65,6 +66,7 @@ public class App extends JFrame {
 
     colorChannelBtn.addActionListener(new ColorChannelListener());
     grayscaleBtn.addActionListener(new GrayscaleListener());
+    rotateBtn.addActionListener(new RotateListener());
 
     colorChannelBtn.setAlignmentX(JButton.CENTER_ALIGNMENT);
     grayscaleBtn.setAlignmentX(JButton.CENTER_ALIGNMENT);
@@ -169,6 +171,44 @@ public class App extends JFrame {
       }
 
       filters.grayscaleImage();
+    }
+  }
+
+  /**
+   * Класс слушателя для кнопки поворота изображения.
+   */
+  private class RotateListener implements ActionListener {
+
+    /**
+     * Метод, который вызывается при нажатии кнопки.
+     *
+     * @param actionEvent объект события
+     */
+    @Override
+    public void actionPerformed(ActionEvent actionEvent) {
+      if (camera.getIsCapturing()) {
+        WarningDialog.showDialog(WarningMessage.CAPTURING);
+        return;
+      }
+      if (imageMatrix.empty()) {
+        WarningDialog.showDialog(WarningMessage.EMPTY_IMAGE);
+        return;
+      }
+
+      Box box = new Box(BoxLayout.Y_AXIS);
+      JLabel label = new JLabel("Значение угла поворота");
+      IntegerField field = new IntegerField();
+      box.add(label);
+      box.add(field);
+
+      JOptionPane.showMessageDialog(null, box,
+          "Угол поворота", JOptionPane.PLAIN_MESSAGE);
+      Object value = field.getValue();
+      if (value == null) {
+        WarningDialog.showDialog(WarningMessage.EMPTY_VALUE);
+      } else {
+        filters.rotateImage((int) value);
+      }
     }
   }
 }

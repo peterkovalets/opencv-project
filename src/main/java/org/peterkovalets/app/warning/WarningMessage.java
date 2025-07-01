@@ -8,7 +8,8 @@ public enum WarningMessage {
   EMPTY_IMAGE("Изображение не существует!"),
   IMAGE_GRAYSCALE("Изображение уже в оттенках серого!"),
   CAMERA_ALREADY_CAPTURING("Камера уже работает!"),
-  CAMERA_NOT_ENABLED("Камера не включена!");
+  CAMERA_NOT_ENABLED("Камера не включена!"),
+  EMPTY_VALUE("Значение не может быть пустым!");
 
   /**
    * Конструктор класса.
