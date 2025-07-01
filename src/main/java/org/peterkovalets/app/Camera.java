@@ -3,6 +3,8 @@ package org.peterkovalets.app;
 import org.opencv.core.Mat;
 import org.opencv.videoio.VideoCapture;
 import org.peterkovalets.app.components.ImageLabel;
+import org.peterkovalets.app.warning.WarningDialog;
+import org.peterkovalets.app.warning.WarningMessage;
 
 import javax.swing.*;
 
@@ -35,8 +37,7 @@ public class Camera {
    */
   public void start() {
     if (isCapturing) {
-      JOptionPane.showMessageDialog(null, "Камера уже работает!",
-          "Камера", JOptionPane.WARNING_MESSAGE);
+      WarningDialog.showDialog(WarningMessage.CAMERA_ALREADY_CAPTURING);
       return;
     }
 
@@ -66,8 +67,7 @@ public class Camera {
    */
   public void stop() {
     if (!isCapturing) {
-      JOptionPane.showMessageDialog(null, "Камера не включена!",
-          "Камера", JOptionPane.WARNING_MESSAGE);
+      WarningDialog.showDialog(WarningMessage.CAMERA_NOT_ENABLED);
       return;
     }
 

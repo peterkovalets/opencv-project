@@ -2,9 +2,13 @@ package org.peterkovalets.app;
 
 import org.opencv.core.Mat;
 import org.peterkovalets.app.components.ImageLabel;
+import org.peterkovalets.app.components.IntegerField;
+import org.peterkovalets.app.warning.WarningDialog;
+import org.peterkovalets.app.warning.WarningMessage;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 
 /**
  * Основной класс приложения.
@@ -16,6 +20,7 @@ public class App extends JFrame {
   private final Mat imageMatrix;
   private final Camera camera;
   private final ImageLoader imageLoader;
+  private final Filters filters;
 
   /**
    * Конструктор класса.
@@ -27,8 +32,10 @@ public class App extends JFrame {
     ImageLabel imageLabel = new ImageLabel();
     camera = new Camera(imageMatrix, imageLabel, CAMERA_ID);
     imageLoader = new ImageLoader(imageMatrix, imageLabel);
+    filters = new Filters(imageMatrix, imageLabel);
     getContentPane().add(BorderLayout.CENTER, imageLabel);
 
+    setUpRightPanel();
     setUpBottomPanel();
 
     setSize(800, 600);
@@ -48,6 +55,35 @@ public class App extends JFrame {
   }
 
   /**
+   * Создает панель в правой части экрана.
+   */
+  private void setUpRightPanel() {
+    Box rightBox = new Box(BoxLayout.Y_AXIS);
+    JButton colorChannelBtn = new JButton("Показать канал изображения");
+    JButton grayscaleBtn = new JButton("Получить в оттенках серого");
+    JButton rotateBtn = new JButton("Выполнить вращение");
+    JButton drawRectBtn = new JButton("Нарисовать прямоугольник");
+
+    colorChannelBtn.addActionListener(new ColorChannelListener());
+    grayscaleBtn.addActionListener(new GrayscaleListener());
+    rotateBtn.addActionListener(new RotateListener());
+    drawRectBtn.addActionListener(new DrawRectListener());
+
+    colorChannelBtn.setAlignmentX(JButton.CENTER_ALIGNMENT);
+    grayscaleBtn.setAlignmentX(JButton.CENTER_ALIGNMENT);
+    rotateBtn.setAlignmentX(JButton.CENTER_ALIGNMENT);
+    drawRectBtn.setAlignmentX(JButton.CENTER_ALIGNMENT);
+
+    rightBox.add(Box.createVerticalGlue());
+    rightBox.add(colorChannelBtn);
+    rightBox.add(grayscaleBtn);
+    rightBox.add(rotateBtn);
+    rightBox.add(drawRectBtn);
+    rightBox.add(Box.createVerticalGlue());
+    getContentPane().add(BorderLayout.EAST, rightBox);
+  }
+
+  /**
    * Создает нижнюю панель пользовательского интерфейса.
    */
   private void setUpBottomPanel() {
@@ -58,7 +94,7 @@ public class App extends JFrame {
 
     loadImageBtn.addActionListener(event -> {
       if (camera.getIsCapturing()) {
-        showCapturingWarningDialog();
+        WarningDialog.showDialog(WarningMessage.CAPTURING);
         return;
       }
 
@@ -74,10 +110,164 @@ public class App extends JFrame {
   }
 
   /**
-   * Показывает предупреждение о том, что камера уже работает.
+   * Класс слушателя для кнопки показа канала изображения.
    */
-  private void showCapturingWarningDialog() {
-    JOptionPane.showMessageDialog(null, "Камера должна быть остановлена!",
-        "Камера", JOptionPane.WARNING_MESSAGE);
+  private class ColorChannelListener implements ActionListener {
+
+    /**
+     * Метод, который вызывается при нажатии кнопки.
+     *
+     * @param actionEvent объект события
+     */
+    @Override
+    public void actionPerformed(ActionEvent actionEvent) {
+      if (camera.getIsCapturing()) {
+        WarningDialog.showDialog(WarningMessage.CAPTURING);
+        return;
+      }
+      if (imageMatrix.empty()) {
+        WarningDialog.showDialog(WarningMessage.EMPTY_IMAGE);
+        return;
+      }
+      if (imageMatrix.channels() == 1) {
+        WarningDialog.showDialog(WarningMessage.IMAGE_GRAYSCALE);
+        return;
+      }
+
+      String[] buttons = { "Синий", "Зеленый", "Красный" };
+      int initialBtnIndex = 0;
+      int returnValue = JOptionPane.showOptionDialog(null, "Выберите цветовой канал",
+          "Канал изображения", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null,
+          buttons, buttons[initialBtnIndex]);
+
+      if (returnValue != -1) {
+        filters.extractColorChannel(returnValue);
+      }
+    }
+  }
+
+  /**
+   * Класс слушателя для кнопки показа изображения в оттенках серого.
+   */
+  private class GrayscaleListener implements ActionListener {
+
+    /**
+     * Метод, который вызывается при нажатии кнопки.
+     *
+     * @param actionEvent объект события
+     */
+    @Override
+    public void actionPerformed(ActionEvent actionEvent) {
+      if (camera.getIsCapturing()) {
+        WarningDialog.showDialog(WarningMessage.CAPTURING);
+        return;
+      }
+      if (imageMatrix.empty()) {
+        WarningDialog.showDialog(WarningMessage.EMPTY_IMAGE);
+        return;
+      }
+      if (imageMatrix.channels() == 1) {
+        WarningDialog.showDialog(WarningMessage.IMAGE_GRAYSCALE);
+        return;
+      }
+
+      filters.grayscaleImage();
+    }
+  }
+
+  /**
+   * Класс слушателя для кнопки поворота изображения.
+   */
+  private class RotateListener implements ActionListener {
+
+    /**
+     * Метод, который вызывается при нажатии кнопки.
+     *
+     * @param actionEvent объект события
+     */
+    @Override
+    public void actionPerformed(ActionEvent actionEvent) {
+      if (camera.getIsCapturing()) {
+        WarningDialog.showDialog(WarningMessage.CAPTURING);
+        return;
+      }
+      if (imageMatrix.empty()) {
+        WarningDialog.showDialog(WarningMessage.EMPTY_IMAGE);
+        return;
+      }
+
+      Box box = new Box(BoxLayout.Y_AXIS);
+      JLabel label = new JLabel("Значение угла поворота");
+      IntegerField field = new IntegerField();
+      box.add(label);
+      box.add(field);
+
+      JOptionPane.showMessageDialog(null, box,
+          "Угол поворота", JOptionPane.PLAIN_MESSAGE);
+      Object value = field.getValue();
+      if (value == null) {
+        WarningDialog.showDialog(WarningMessage.EMPTY_VALUE);
+      } else {
+        filters.rotateImage((int) value);
+      }
+    }
+  }
+
+  /**
+   * Класс слушателя для кнопки рисования прямоугольника.
+   */
+  private class DrawRectListener implements ActionListener {
+
+    /**
+     * Метод, который вызывается при нажатии кнопки.
+     *
+     * @param actionEvent объект события
+     */
+    @Override
+    public void actionPerformed(ActionEvent actionEvent) {
+      if (camera.getIsCapturing()) {
+        WarningDialog.showDialog(WarningMessage.CAPTURING);
+        return;
+      }
+      if (imageMatrix.empty()) {
+        WarningDialog.showDialog(WarningMessage.EMPTY_IMAGE);
+        return;
+      }
+
+      GridLayout grid = new GridLayout(4, 2);
+      grid.setVgap(1);
+      grid.setHgap(4);
+      JPanel panel = new JPanel(grid);
+      JLabel labelStartX = new JLabel("Отступ начала по x");
+      JLabel labelStartY = new JLabel("Отступ начала по y");
+      IntegerField fieldStartX = new IntegerField();
+      IntegerField fieldStartY = new IntegerField();
+      JLabel labelEndX = new JLabel("Отступ конца по x");
+      JLabel labelEndY = new JLabel("Отступ конца по y");
+      IntegerField fieldEndX = new IntegerField();
+      IntegerField fieldEndY = new IntegerField();
+
+      panel.add(labelStartX);
+      panel.add(labelStartY);
+      panel.add(fieldStartX);
+      panel.add(fieldStartY);
+      panel.add(labelEndX);
+      panel.add(labelEndY);
+      panel.add(fieldEndX);
+      panel.add(fieldEndY);
+
+      JOptionPane.showMessageDialog(null, panel,
+          "Координаты прямоугольника", JOptionPane.PLAIN_MESSAGE);
+      Object startX = fieldStartX.getValue();
+      Object startY = fieldStartY.getValue();
+      Object endX = fieldEndX.getValue();
+      Object endY = fieldEndY.getValue();
+
+      if (startX == null || startY == null || endX == null || endY == null) {
+        WarningDialog.showDialog(WarningMessage.ALL_SHOULD_BE_FILLED);
+      } else {
+        filters.drawRectOnImage((int) startX, (int) startY, (int) endX, (int) endY);
+      }
+    }
   }
 }
