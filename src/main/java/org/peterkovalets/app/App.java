@@ -15,6 +15,7 @@ public class App extends JFrame {
 
   private final Mat imageMatrix;
   private final Camera camera;
+  private final ImageLoader imageLoader;
 
   /**
    * Конструктор класса.
@@ -25,6 +26,7 @@ public class App extends JFrame {
     imageMatrix = new Mat();
     ImageLabel imageLabel = new ImageLabel();
     camera = new Camera(imageMatrix, imageLabel, CAMERA_ID);
+    imageLoader = new ImageLoader(imageMatrix, imageLabel);
     getContentPane().add(BorderLayout.CENTER, imageLabel);
 
     setUpBottomPanel();
@@ -60,7 +62,7 @@ public class App extends JFrame {
         return;
       }
 
-      // Загрузить изображение
+      imageLoader.loadImage();
     });
     startCameraBtn.addActionListener(event -> camera.start());
     cameraScreenshotBtn.addActionListener(event -> camera.stop());
