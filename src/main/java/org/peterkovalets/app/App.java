@@ -2,6 +2,8 @@ package org.peterkovalets.app;
 
 import org.opencv.core.Mat;
 import org.peterkovalets.app.components.ImageLabel;
+import org.peterkovalets.app.warning.WarningDialog;
+import org.peterkovalets.app.warning.WarningMessage;
 
 import javax.swing.*;
 import java.awt.*;
@@ -62,6 +64,7 @@ public class App extends JFrame {
     JButton drawRectBtn = new JButton("Нарисовать прямоугольник");
 
     colorChannelBtn.addActionListener(new ColorChannelListener());
+    grayscaleBtn.addActionListener(new GrayscaleListener());
 
     colorChannelBtn.setAlignmentX(JButton.CENTER_ALIGNMENT);
     grayscaleBtn.setAlignmentX(JButton.CENTER_ALIGNMENT);
@@ -88,7 +91,7 @@ public class App extends JFrame {
 
     loadImageBtn.addActionListener(event -> {
       if (camera.getIsCapturing()) {
-        showCapturingWarningDialog();
+        WarningDialog.showDialog(WarningMessage.CAPTURING);
         return;
       }
 
@@ -104,22 +107,6 @@ public class App extends JFrame {
   }
 
   /**
-   * Показывает предупреждение о том, что камера уже работает.
-   */
-  private void showCapturingWarningDialog() {
-    JOptionPane.showMessageDialog(null, "Камера должна быть остановлена!",
-        "Камера", JOptionPane.WARNING_MESSAGE);
-  }
-
-  /**
-   * Показывает диалоговое окно, сообщающее, что изображение не существует.
-   */
-  private void showEmptyImageErrorDialog() {
-    JOptionPane.showMessageDialog(null, "Изображение не существует!",
-        "Ошибка", JOptionPane.ERROR_MESSAGE);
-  }
-
-  /**
    * Класс слушателя для кнопки показа канала изображения.
    */
   private class ColorChannelListener implements ActionListener {
@@ -132,11 +119,15 @@ public class App extends JFrame {
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
       if (camera.getIsCapturing()) {
-        showCapturingWarningDialog();
+        WarningDialog.showDialog(WarningMessage.CAPTURING);
         return;
       }
       if (imageMatrix.empty()) {
-        showEmptyImageErrorDialog();
+        WarningDialog.showDialog(WarningMessage.EMPTY_IMAGE);
+        return;
+      }
+      if (imageMatrix.channels() == 1) {
+        WarningDialog.showDialog(WarningMessage.IMAGE_GRAYSCALE);
         return;
       }
 
@@ -149,6 +140,35 @@ public class App extends JFrame {
       if (returnValue != -1) {
         filters.extractColorChannel(returnValue);
       }
+    }
+  }
+
+  /**
+   * Класс слушателя для кнопки показа изображения в оттенках серого.
+   */
+  private class GrayscaleListener implements ActionListener {
+
+    /**
+     * Метод, который вызывается при нажатии кнопки.
+     *
+     * @param actionEvent объект события
+     */
+    @Override
+    public void actionPerformed(ActionEvent actionEvent) {
+      if (camera.getIsCapturing()) {
+        WarningDialog.showDialog(WarningMessage.CAPTURING);
+        return;
+      }
+      if (imageMatrix.empty()) {
+        WarningDialog.showDialog(WarningMessage.EMPTY_IMAGE);
+        return;
+      }
+      if (imageMatrix.channels() == 1) {
+        WarningDialog.showDialog(WarningMessage.IMAGE_GRAYSCALE);
+        return;
+      }
+
+      filters.grayscaleImage();
     }
   }
 }
